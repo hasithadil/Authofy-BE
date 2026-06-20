@@ -5,7 +5,9 @@ import com.pm.be.dto.ProfileResponseDto;
 import com.pm.be.entity.User;
 import com.pm.be.repository.UserRepo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
@@ -17,9 +19,13 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ProfileResponseDto createProfile(ProfileRequestDto requestDto) {
         User newProfile = convertToUserEntity(requestDto);
-        newProfile = userRepo.save(newProfile);
 
-        return convertToProfileResponseDto(newProfile);
+        if(!userRepo.existsByEmail(newProfile.getEmail())) {
+            newProfile = userRepo.save(newProfile);
+            return convertToProfileResponseDto(newProfile);
+        }
+
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");
     }
 
     public User convertToUserEntity(ProfileRequestDto requestDto) {
